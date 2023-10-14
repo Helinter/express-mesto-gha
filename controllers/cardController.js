@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const Card = require('../models/Card');
 
 exports.getAllCards = async (_, res) => {
@@ -16,7 +18,13 @@ exports.createCard = async (req, res) => {
     await newCard.save();
     res.status(201).json(newCard);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data provided' });
+    if (error.name === 'ValidationError') {
+      // Обработка ошибки валидации схемы (некорректные данные)
+      res.status(400).json({ error: 'Invalid data provided' });
+    } else {
+      // Обработка других ошибок (например, ошибка базы данных)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -29,7 +37,13 @@ exports.deleteCard = async (req, res) => {
       res.status(404).json({ error: 'Card not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (error instanceof mongoose.CastError) {
+      // Обработка ошибки некорректного ObjectId
+      res.status(400).json({ error: 'Invalid cardId provided' });
+    } else {
+      // Обработка других ошибок (например, ошибка базы данных)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -46,7 +60,13 @@ exports.likeCard = async (req, res) => {
       res.status(404).json({ error: 'Card not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (error instanceof mongoose.CastError) {
+      // Обработка ошибки некорректного ObjectId
+      res.status(400).json({ error: 'Invalid cardId provided' });
+    } else {
+      // Обработка других ошибок (например, ошибка базы данных)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -63,6 +83,12 @@ exports.dislikeCard = async (req, res) => {
       res.status(404).json({ error: 'Card not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (error instanceof mongoose.CastError) {
+      // Обработка ошибки некорректного ObjectId
+      res.status(400).json({ error: 'Invalid cardId provided' });
+    } else {
+      // Обработка других ошибок (например, ошибка базы данных)
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };

@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 const User = require('../models/User');
 
 exports.getAllUsers = async (_, res) => {
@@ -18,7 +20,13 @@ exports.getUserById = async (req, res) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    if (error instanceof mongoose.CastError) {
+      // Обработка ошибки CastError (некорректный ID)
+      res.status(400).json({ error: 'Invalid user ID' });
+    } else {
+      // Обработка других ошибок
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -28,7 +36,7 @@ exports.updateProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { name, about },
-      { new: true },
+      { new: true, runValidators: true },
     );
     if (updatedUser) {
       res.json(updatedUser);
@@ -36,7 +44,11 @@ exports.updateProfile = async (req, res) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data provided' });
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ error: 'Invalid data provided' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -46,7 +58,7 @@ exports.updateAvatar = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { avatar },
-      { new: true },
+      { new: true, runValidators: true },
     );
     if (updatedUser) {
       res.json(updatedUser);
@@ -54,7 +66,11 @@ exports.updateAvatar = async (req, res) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data provided' });
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ error: 'Invalid data provided' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };
 
@@ -65,6 +81,10 @@ exports.createUser = async (req, res) => {
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid data provided' });
+    if (error.name === 'ValidationError') {
+      res.status(400).json({ error: 'Invalid data provided' });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
   }
 };

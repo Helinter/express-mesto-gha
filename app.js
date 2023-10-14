@@ -1,9 +1,12 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = 'mongodb://localhost:27017/mestodb';
+const MONGODB_URI = 'mongodb://127.0.0.1:27017/mestodb';
+
+app.use(helmet());
 
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -17,13 +20,13 @@ app.use((req, res, next) => {
   next();
 });
 
-const userController = require('./controllers/userController');
+const userRouter = require('./routes/users');
 
-app.get('/users', userController.getAllUsers);
-app.get('/users/:userId', userController.getUserById);
-app.post('/users', userController.createUser);
-app.patch('/users/me', userController.updateProfile);
-app.patch('/users/me/avatar', userController.updateAvatar);
+app.use(userRouter);
+
+const cardRouter = require('./routes/cards');
+
+app.use(cardRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
