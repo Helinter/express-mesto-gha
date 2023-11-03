@@ -1,17 +1,16 @@
 const mongoose = require('mongoose');
-
 const Card = require('../models/Card');
 
-exports.getAllCards = async (_, res) => {
+exports.getAllCards = async (_, res, next) => {
   try {
     const cards = await Card.find();
     res.json(cards);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 };
 
-exports.createCard = async (req, res) => {
+exports.createCard = async (req, res, next) => {
   const { name, link } = req.body;
   try {
     const newCard = new Card({ name, link, owner: req.user._id });
@@ -19,16 +18,14 @@ exports.createCard = async (req, res) => {
     res.status(201).json(newCard);
   } catch (error) {
     if (error.name === 'ValidationError') {
-      // Обработка ошибки валидации схемы (некорректные данные)
       res.status(400).json({ error: 'Invalid data provided' });
     } else {
-      // Обработка других ошибок (например, ошибка базы данных)
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.deleteCard = async (req, res) => {
+exports.deleteCard = async (req, res, next) => {
   try {
     const deletedCard = await Card.findByIdAndDelete(req.params.cardId);
     if (deletedCard) {
@@ -38,16 +35,14 @@ exports.deleteCard = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof mongoose.CastError) {
-      // Обработка ошибки некорректного ObjectId
       res.status(400).json({ error: 'Invalid cardId provided' });
     } else {
-      // Обработка других ошибок (например, ошибка базы данных)
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.likeCard = async (req, res) => {
+exports.likeCard = async (req, res, next) => {
   try {
     const updatedCard = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -61,16 +56,14 @@ exports.likeCard = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof mongoose.CastError) {
-      // Обработка ошибки некорректного ObjectId
       res.status(400).json({ error: 'Invalid cardId provided' });
     } else {
-      // Обработка других ошибок (например, ошибка базы данных)
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.dislikeCard = async (req, res) => {
+exports.dislikeCard = async (req, res, next) => {
   try {
     const updatedCard = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -84,11 +77,9 @@ exports.dislikeCard = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof mongoose.CastError) {
-      // Обработка ошибки некорректного ObjectId
       res.status(400).json({ error: 'Invalid cardId provided' });
     } else {
-      // Обработка других ошибок (например, ошибка базы данных)
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };

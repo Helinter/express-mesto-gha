@@ -1,21 +1,20 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const saltRounds = 10;
 
-const User = require('../models/User');
-
-exports.getAllUsers = async (_, res) => {
+exports.getAllUsers = async (_, res, next) => {
   try {
     const users = await User.find();
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    next(error);
   }
 };
 
-exports.getUserById = async (req, res) => {
+exports.getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId);
     if (user) {
@@ -25,16 +24,14 @@ exports.getUserById = async (req, res) => {
     }
   } catch (error) {
     if (error instanceof mongoose.CastError) {
-      // Обработка ошибки CastError (некорректный ID)
-      res.status(400).json({ error: 'Invalid user IDооо' });
+      res.status(400).json({ error: 'Invalid user ID' });
     } else {
-      // Обработка других ошибок
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.updateProfile = async (req, res) => {
+exports.updateProfile = async (req, res, next) => {
   const { name, about } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -51,12 +48,12 @@ exports.updateProfile = async (req, res) => {
     if (error.name === 'ValidationError') {
       res.status(400).json({ error: 'Invalid data provided' });
     } else {
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.updateAvatar = async (req, res) => {
+exports.updateAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
@@ -73,70 +70,69 @@ exports.updateAvatar = async (req, res) => {
     if (error.name === 'ValidationError') {
       res.status(400).json({ error: 'Invalid data provided' });
     } else {
-      res.status(500).json({ error: 'Internal Server Error' });
+      next(error);
     }
   }
 };
 
-exports.createUser = async (req, res) => {
+exports.createUser = async (req, res, next) => {
   const {
-    name = 'Жак-Ив Кусто', about = 'Исследователь', avatar = 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png', email, password,
+    name = 'Жак-Ив Кусто',
+    about = 'Исследователь',
+    avatar = 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    email,
+    password,
   } = req.body;
 
   try {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const newUser = new User({
-      name, about, avatar, email, password: hashedPassword,
+      name,
+      about,
+      avatar,
+      email,
+      password: hashedPassword,
     });
     await newUser.save();
     res.status(201).json(newUser);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).json({ error: 'Invalid data provided' });
-    } else {
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
+    next(error);
   }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    // Поиск пользователя по email
-    const user = await User.findOne({ email });
-    // Проверка, найден ли пользователь и совпадает ли пароль
-    if (user && await bcrypt.compare(password, user.password)) {
-      // Создание JWT токена с payload { _id: user._id }
-      const token = jwt.sign({
-        _id: user._id,
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
-      }, 'your_secret_key', { expiresIn: '1w' });
-      // Отправка JWT в httpOnly куке
+    const user = await User.findOne({ email }).select('+password');
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const token = jwt.sign(
+        {
+          _id: user._id,
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+          email: user.email,
+        },
+        'your_secret_key',
+        { expiresIn: '1w' },
+      );
       res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-
-      // Возвращаем успешный статус, данные пользователя и токен
       res.status(200).json({ success: true, user, token });
     } else {
-      // Если пользователь не найден или пароль неверный, отправляем ошибку 401
-      res.status(401).json({ success: false, error: 'Invalid email or password' });
+      const error = new Error('Invalid email or password');
+      error.status = 401;
+      next(error);
     }
   } catch (error) {
-    // В случае ошибки отправляем ошибку 500
-    res.status(500).json({ success: false, error: 'Internal Server Error' });
+    next(error);
   }
 };
 
 exports.getUserInfo = (req, res) => {
-  // Получаем информацию о текущем пользователе из объекта запроса (req.user)
   const {
     _id, name, about, avatar, email,
   } = req.user;
-
-  // Возвращаем информацию о пользователе в ответе
   res.status(200).json({
     _id, name, about, avatar, email,
   });
