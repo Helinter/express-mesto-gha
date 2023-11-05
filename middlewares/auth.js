@@ -6,7 +6,9 @@ const authMiddleware = (req, res, next) => {
 
   // Проверка наличия токена
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: Token is missing or invalid' });
+    const error = new Error('Unauthorized: Token is missing or invalid');
+    error.status = 401;
+    return next(error);
   }
 
   // Извлекаем токен из заголовка
@@ -21,8 +23,7 @@ const authMiddleware = (req, res, next) => {
     // Продолжение выполнения запроса
     return next();
   } catch (error) {
-    // Если токен недействителен, возвращаем ошибку 401
-    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    return next(error);
   }
 };
 

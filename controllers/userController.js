@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -23,11 +22,7 @@ exports.getUserById = async (req, res, next) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    if (error instanceof mongoose.CastError) {
-      res.status(400).json({ error: 'Invalid user ID' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -45,11 +40,7 @@ exports.updateProfile = async (req, res, next) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).json({ error: 'Invalid data provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -67,11 +58,7 @@ exports.updateAvatar = async (req, res, next) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).json({ error: 'Invalid data provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -94,7 +81,12 @@ exports.createUser = async (req, res, next) => {
       password: hashedPassword,
     });
     await newUser.save();
-    res.status(201).json(newUser);
+
+    // Удаляем поле password из объекта, возвращаемого в ответе
+    const userResponse = { ...newUser.toObject() };
+    delete userResponse.password;
+
+    res.status(201).json(userResponse);
   } catch (error) {
     next(error);
   }
@@ -117,8 +109,13 @@ exports.login = async (req, res, next) => {
         'your_secret_key',
         { expiresIn: '1w' },
       );
+
+      // Удаляем поле password из объекта user
+      const userResponse = { ...user.toObject() };
+      delete userResponse.password;
+
       res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-      res.status(200).json({ success: true, user, token });
+      res.status(200).json({ success: true, user: userResponse, token });
     } else {
       const error = new Error('Invalid email or password');
       error.status = 401;

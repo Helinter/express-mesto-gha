@@ -1,10 +1,9 @@
-const mongoose = require('mongoose');
 const Card = require('../models/Card');
 
-exports.getAllCards = async (_, res, next) => {
+exports.getAllCards = async (req, res, next) => {
   try {
     const cards = await Card.find();
-    res.json(cards);
+    res.status(200).json(cards);
   } catch (error) {
     next(error);
   }
@@ -17,28 +16,25 @@ exports.createCard = async (req, res, next) => {
     await newCard.save();
     res.status(201).json(newCard);
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      res.status(400).json({ error: 'Invalid data provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
 exports.deleteCard = async (req, res, next) => {
   try {
-    const deletedCard = await Card.findByIdAndDelete(req.params.cardId);
-    if (deletedCard) {
-      res.json(deletedCard);
+    const card = await Card.findById(req.params.cardId);
+    if (card.owner.toString() !== req.user._id.toString()) {
+      res.status(403).json({ error: 'Insufficient permissions to delete this card' });
     } else {
-      res.status(404).json({ error: 'Card not found' });
+      const deletedCard = await Card.findByIdAndDelete(req.params.cardId);
+      if (deletedCard) {
+        res.json(deletedCard);
+      } else {
+        res.status(404).json({ error: 'Card not found' });
+      }
     }
   } catch (error) {
-    if (error instanceof mongoose.CastError) {
-      res.status(400).json({ error: 'Invalid cardId provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -55,11 +51,7 @@ exports.likeCard = async (req, res, next) => {
       res.status(404).json({ error: 'Card not found' });
     }
   } catch (error) {
-    if (error instanceof mongoose.CastError) {
-      res.status(400).json({ error: 'Invalid cardId provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };
 
@@ -76,10 +68,6 @@ exports.dislikeCard = async (req, res, next) => {
       res.status(404).json({ error: 'Card not found' });
     }
   } catch (error) {
-    if (error instanceof mongoose.CastError) {
-      res.status(400).json({ error: 'Invalid cardId provided' });
-    } else {
-      next(error);
-    }
+    next(error);
   }
 };

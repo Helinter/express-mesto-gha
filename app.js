@@ -29,6 +29,12 @@ app.post('/signup', userController.createUser);
 // Подключаем мидлвэр для обработки ошибок
 app.use(handleErrors);
 
+app.use((req, res, next) => {
+  const error = new Error('Not Found');
+  error.status = 404;
+  next(error);
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
