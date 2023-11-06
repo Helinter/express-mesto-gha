@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const NotFoundError = require('../middlewares/NotFoundError');
 
 const saltRounds = 10;
 
@@ -19,7 +20,7 @@ exports.getUserById = async (req, res, next) => {
     if (user) {
       res.json(user);
     } else {
-      res.status(404).json({ error: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     next(error);
@@ -27,17 +28,17 @@ exports.getUserById = async (req, res, next) => {
 };
 
 exports.updateProfile = async (req, res, next) => {
-  const { name, about } = req.body;
+  const { name, about, avatar } = req.body;
   try {
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { name, about },
+      { name, about, avatar },
       { new: true, runValidators: true },
     );
     if (updatedUser) {
       res.json(updatedUser);
     } else {
-      res.status(404).json({ error: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     next(error);
@@ -55,7 +56,7 @@ exports.updateAvatar = async (req, res, next) => {
     if (updatedUser) {
       res.json(updatedUser);
     } else {
-      res.status(404).json({ error: 'User not found' });
+      throw new NotFoundError('User not found');
     }
   } catch (error) {
     next(error);

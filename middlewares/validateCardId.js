@@ -6,9 +6,8 @@ const validateCardId = (req, res, next) => {
   });
   const { error } = cardIdSchema.validate({ cardId: req.params.cardId });
   if (error) {
-    const validationError = new Error('Invalid cardId provided');
-    validationError.status = 400;
-    return next(validationError);
+    // Joi автоматически создаст объект ошибки с нужными свойствами
+    return next(error);
   }
   // Если ID прошел валидацию, продолжите выполнение запроса
   return next();

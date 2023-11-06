@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
+const { errors } = require('celebrate');
 const handleErrors = require('./middlewares/errorMiddleware'); // Импортируем мидлвэр для обработки ошибок
 
 const app = express();
@@ -26,14 +27,16 @@ app.post('/signin', userController.login);
 // Роут для регистрации
 app.post('/signup', userController.createUser);
 
-// Подключаем мидлвэр для обработки ошибок
-app.use(handleErrors);
+app.use(errors());
 
 app.use((req, res, next) => {
   const error = new Error('Not Found');
   error.status = 404;
   next(error);
 });
+
+// Подключаем мидлвэр для обработки ошибок
+app.use(handleErrors);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

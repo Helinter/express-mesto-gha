@@ -1,4 +1,4 @@
-const JoiUserSchema = require('../models/JoiUser');
+const JoiUserSchema = require('./JoiUser');
 
 const validateUserData = (req, res, next) => {
   const { error } = JoiUserSchema.validate(req.body);

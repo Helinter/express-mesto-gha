@@ -1,11 +1,11 @@
-const joiCardSchema = require('../models/JoiCard');
+const joiCardSchema = require('./JoiCard');
+
 // Middleware для валидации данных карточек
 const validateCardData = (req, res, next) => {
   const { error } = joiCardSchema.validate(req.body);
   if (error) {
-    const validationError = new Error(error.details[0].message);
-    validationError.status = 400;
-    return next(validationError);
+    // Joi автоматически создаст объект ошибки с нужными свойствами
+    return next(error);
   }
   // Если данные прошли валидацию, продолжите выполнение запроса
   return next();
