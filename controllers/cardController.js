@@ -1,11 +1,12 @@
 const Card = require('../models/Card');
+const NotFoundError = require('../middlewares/NotFoundError'); // Подключаем класс ошибки
 
 exports.getAllCards = async (req, res, next) => {
   try {
     const cards = await Card.find();
     res.status(200).json(cards);
   } catch (error) {
-    next(error);
+    next(error); // Передаем ошибку централизованному обработчику ошибок
   }
 };
 
@@ -16,7 +17,7 @@ exports.createCard = async (req, res, next) => {
     await newCard.save();
     res.status(201).json(newCard);
   } catch (error) {
-    next(error);
+    next(error); // Передаем ошибку централизованному обработчику ошибок
   }
 };
 
@@ -24,17 +25,17 @@ exports.deleteCard = async (req, res, next) => {
   try {
     const card = await Card.findById(req.params.cardId);
     if (card.owner.toString() !== req.user._id.toString()) {
-      res.status(403).json({ error: 'Insufficient permissions to delete this card' });
+      next(new Error('Insufficient permissions to delete this card')); // Используем стандартный класс ошибки для отсутствия разрешений
     } else {
       const deletedCard = await Card.findByIdAndDelete(req.params.cardId);
       if (deletedCard) {
         res.json(deletedCard);
       } else {
-        res.status(404).json({ error: 'Card not found' });
+        next(new NotFoundError('Карточка не найдена'));
       }
     }
   } catch (error) {
-    next(error);
+    next(error); // Передаем ошибку централизованному обработчику ошибок
   }
 };
 
@@ -48,10 +49,10 @@ exports.likeCard = async (req, res, next) => {
     if (updatedCard) {
       res.json(updatedCard);
     } else {
-      res.status(404).json({ error: 'Card not found' });
+      next(new NotFoundError('Карточка не найдена'));
     }
   } catch (error) {
-    next(error);
+    next(error); // Передаем ошибку централизованному обработчику ошибок
   }
 };
 
@@ -65,9 +66,9 @@ exports.dislikeCard = async (req, res, next) => {
     if (updatedCard) {
       res.json(updatedCard);
     } else {
-      res.status(404).json({ error: 'Card not found' });
+      next(new NotFoundError('Карточка не найдена'));
     }
   } catch (error) {
-    next(error);
+    next(error); // Передаем ошибку централизованному обработчику ошибок
   }
 };
