@@ -1,10 +1,15 @@
 const express = require('express');
+
+const cors = require('cors');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const { errors } = require('celebrate');
 const handleErrors = require('./middlewares/errorMiddleware'); // Импортируем мидлвэр для обработки ошибок
 
 const app = express();
+
+app.use(cors());
+
 const PORT = process.env.PORT || 3000;
 const MONGODB_URI = 'mongodb://127.0.0.1:27017/mestodb';
 

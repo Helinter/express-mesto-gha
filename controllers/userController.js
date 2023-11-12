@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const NotFoundError = require('../middlewares/NotFoundError');
 const UnauthorizedError = require('../middlewares/UnauthorizedError');
+require('dotenv').config();
+const JWT_SECRET = process.env.JWT_SECRET.trim();
 
 const saltRounds = 10;
 
@@ -108,7 +110,7 @@ exports.login = async (req, res, next) => {
           avatar: user.avatar,
           email: user.email,
         },
-        'your_secret_key',
+        JWT_SECRET,
         { expiresIn: '1w' },
       );
 
