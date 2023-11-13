@@ -26,6 +26,12 @@ const cardRouter = require('./routes/cards');
 
 app.use(cardRouter);
 
+app.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Сервер сейчас упадёт');
+  }, 0);
+});
+
 // Роут для логина
 app.post('/signin', userController.login);
 
