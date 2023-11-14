@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
+
 const handleErrors = (err, req, res, next) => {
-  console.log('Error occurred:', err); // Логгируем ошибку
 
   // Проверка на наличие пользовательского сообщения об ошибке
   const errorMessage = err.message || 'Internal Server Error';
