@@ -4,7 +4,8 @@ const User = require('../models/User');
 const NotFoundError = require('../middlewares/NotFoundError');
 const UnauthorizedError = require('../middlewares/UnauthorizedError');
 require('dotenv').config();
-const JWT_SECRET = process.env.JWT_SECRET.trim();
+
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 const saltRounds = 10;
 
@@ -110,7 +111,7 @@ exports.login = async (req, res, next) => {
           avatar: user.avatar,
           email: user.email,
         },
-        JWT_SECRET,
+        NODE_ENV === 'production' ? JWT_SECRET : '7e48151e23b2943091c18f0e3e6e0c6c625f514b47d726c773a39df19eac1e0e',
         { expiresIn: '1w' },
       );
 
